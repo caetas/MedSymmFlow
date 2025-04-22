@@ -394,6 +394,7 @@ class SymmFMClass(nn.Module):
                 #normalize to -1, 1
                 ref_color = ref_color.float()/255.0
                 ref_color = ref_color*2.0 - 1.0
+                dist_plot = torch.norm(mask - ref_color, dim=1)
                 distances[:, i] = torch.norm(mask - ref_color, dim=1).mean(dim=(1, 2))
             return distances
         

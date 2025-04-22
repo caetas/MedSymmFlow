@@ -9,7 +9,7 @@ if __name__ == '__main__':
     if args.train:
         
         image_shape, channels, dataloader = pick_dataset(args.dataset, 'train', args.size, args.batch_size, args.num_workers)
-        _, _, dataloader_val = pick_dataset(args.dataset, 'val', args.size, args.batch_size, args.num_workers)
+        _, _, dataloader_val = pick_dataset(args.dataset, 'val', args.size, 16, args.num_workers)
 
         model = SymmFMClass(args, image_shape, channels)
         #model.sample(16, mask=mask, train=False)
