@@ -349,16 +349,22 @@ class SymmFMClass(nn.Module):
             color_translation = torch.linspace(0, len(self.palette)-1, self.n_classes, device=self.device).long()
             #mask takes the color of the palette corresponding to the label
             distances = torch.zeros(mask.shape[0], self.n_classes, device=self.device)
+            pixel_distances = torch.zeros(mask.shape[0], self.n_classes, mask.shape[2], mask.shape[3], device=self.device)
             for i in range(self.n_classes):
                 ref_color = torch.tensor(self.palette[color_translation[i]], device=self.device).view(1, 3, 1, 1)
                 #normalize to -1, 1
                 ref_color = ref_color.float()/255.0
                 ref_color = ref_color*2.0 - 1.0
                 distances[:, i] = torch.norm(mask - ref_color, dim=1).mean(dim=(1, 2))
+                pixel_distances[:, i] = torch.norm(mask - ref_color, dim=1)
             
             #predict the class with the minimum distance
-            prediction = distances.argmin(dim=1)
-            return prediction
+            mean_prediction = distances.argmin(dim=1)
+            # get the most likely class for each pixel, i.e., for each pixel choose the argmin
+            mode_prediction = pixel_distances.argmin(dim=1)
+            mode_prediction = mode_prediction.flatten(start_dim=1).mode(dim=1)[0]
+
+            return mean_prediction, mode_prediction
 
 
         else:
@@ -376,7 +382,7 @@ class SymmFMClass(nn.Module):
             mode_prediction = mode_prediction.round().clamp(0, self.n_classes-1)
             mode_prediction = mode_prediction.flatten(start_dim=1).mode(dim=1)[0]
 
-            return mean_prediction
+            return mean_prediction, mode_prediction
     
     def distance_to_classes(self, mask):
         '''
@@ -551,6 +557,7 @@ class SymmFMClass(nn.Module):
         self.model.eval()
         gt = []
         pred = []
+        mode_pred = []
         distances = []
         for x, label in tqdm(dataloader, desc='Evaluating', leave=True):
             x = x.to(self.device)
@@ -564,18 +571,65 @@ class SymmFMClass(nn.Module):
 
             predicted_masks = self.segment(x.shape[0], x, train=False, eval=True)
             distances.append(self.distance_to_classes(predicted_masks).cpu().numpy())
-            pred.append(self.quantize_class(predicted_masks).cpu().long().numpy())
+            mean_prediction, mode_prediction = self.quantize_class(predicted_masks)
+            pred.append(mean_prediction.cpu().long().numpy())
+            mode_pred.append(mode_prediction.cpu().long().numpy())
 
         gt = np.concatenate(gt)
         pred = np.concatenate(pred)
+        mode_pred = np.concatenate(mode_pred)
         distances = np.concatenate(distances)
         # get roc_auc score for each class then average them
         auc = [roc_auc_score(gt != i, distances[:,i]) for i in range(self.n_classes)]
 
         acc = accuracy_score(gt, pred)
-
-        print(f"Accuracy: {100*acc:.2f}%")
+        mode_acc = accuracy_score(gt, mode_pred)
+        print(f"Mean Accuracy: {100*acc:.2f}%")
+        print(f"Mode Accuracy: {100*mode_acc:.2f}%")
         print(f"AUC: {100*np.mean(auc):.2f}%")
+
+        self.uncertainty_quantification(gt, pred, mode_pred, distances)
+
+    def uncertainty_quantification(self, gt, pred, mode_pred, distances):
+        '''
+        Uncertainty quantification
+        :param dataloader: data loader
+        '''
+        
+        distances = distances[np.arange(distances.shape[0]), pred]
+
+        # rank gt, pred and distances by distance
+        gt = gt[np.argsort(-distances)]
+        pred = pred[np.argsort(-distances)]
+        mode_pred = mode_pred[np.argsort(-distances)]
+        distances = distances[np.argsort(-distances)]
+
+        # progressively eliminate the most uncertain samples at a rate of 0, then 0.1, 0.2, ..., 0.9
+        # and compute the accuracy for each rate
+        rates = np.arange(0, 1.0, 0.05)
+        accuracies = []
+        mode_accuracies = []
+        for rate in rates:
+            # eliminate the most uncertain samples
+            n_samples = int(len(distances) * rate)
+            gt_ = gt[n_samples:]
+            pred_ = pred[n_samples:]
+            mode_pred_ = mode_pred[n_samples:]
+            acc = accuracy_score(gt_, pred_)
+            accuracies.append(acc)
+            mode_acc = accuracy_score(gt_, mode_pred_)
+            mode_accuracies.append(mode_acc)
+        
+        print(accuracies)
+
+        # plot the accuracies
+        plt.plot(rates, accuracies, label='Mean Prediction')
+        plt.plot(rates, mode_accuracies, label='Mode Prediction')
+        plt.legend()
+        plt.xlabel('Rate of most uncertain samples eliminated')
+        plt.ylabel('Accuracy')
+        plt.title('Uncertainty Quantification')
+        plt.show()
 
 
     @torch.no_grad()
