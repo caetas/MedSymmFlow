@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Top-level package for medsymmflow.
+"""Top-level package for symmetricflow.
 
     A short description of the project. No quotes.
 """
