@@ -1,0 +1,21 @@
+boto3
+# hydra-core==1.2.0
+loguru
+numpy
+psycopg2-binary
+python-dotenv
+s3fs
+tqdm
+zuko
+wandb
+torchdiffeq
+diffusers
+accelerate
+datasets
+matplotlib
+opencv-python
+scikit-learn
+torchmetrics
+lpips
+seaborn
+medmnist
