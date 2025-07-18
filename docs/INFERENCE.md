@@ -28,8 +28,6 @@ You can sample from a pretrained model using:
 
 If you want to classify images from the test set, you can use:
 
-You can sample from a pretrained model using:
-
     python classification.py \
     --classification \
     --batch_size 16 \ 
