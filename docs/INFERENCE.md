@@ -40,7 +40,7 @@ If you want to classify images from the test set, you can use:
     --attention_resolutions 2 \
     --solver_lib torchdiffeq \
     --solver euler \
-    --step_size 0.04 \
+    --step_size 1 \
     --beta 4 \
     --rgb_mask \
     --n_classes 8 \
