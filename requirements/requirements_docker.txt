@@ -1,7 +1,7 @@
 boto3
 # hydra-core==1.2.0
 loguru
-numpy
+numpy==1.26.4
 psycopg2-binary
 python-dotenv
 s3fs
