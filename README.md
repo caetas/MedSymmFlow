@@ -8,7 +8,13 @@
   <img src="imgs/MSF.jpg" width="100%" alt='MSF'>
 </p>
 
-**The official implementation of MedSymmFlow (DGM4MICCAI Workshop).**
+The official implementation of **MedSymmFlow: Bridging Generative Modeling and Classification in Medical Imaging through Symmetrical Flow Matching**.
+
+**[Francisco Caetano](https://caetas.github.io)<sup>1</sup>, [Lemar Abdi](https://scholar.google.com/citations?user=7uH_QwcAAAAJ&hl=en&oi=ao)<sup>1</sup>, [Christiaan Viviers](https://scholar.google.com/citations?hl=en&user=wE8xva4AAAAJ)<sup>1</sup>,  [Amaan Valiuddin](https://scholar.google.com/citations?user=ECYry3MAAAAJ&hl=en&oi=ao)<sup>1</sup>, [Fons van der Sommen](https://scholar.google.com/citations?user=qFiLkCAAAAAJ&hl=en&oi=ao)<sup>1</sup>**
+
+¹ Eindhoven University of Technology  
+
+[**Paper**](https://arxiv.org/abs/2507.19098) (DGM4MICCAI Workshop)
 
 ## Prerequisites
 
